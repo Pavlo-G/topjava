@@ -3,11 +3,18 @@ package ru.javawebinar.topjava.util;
 import ru.javawebinar.topjava.model.UserMeal;
 import ru.javawebinar.topjava.model.UserMealWithExcess;
 
+
+import javax.jws.soap.SOAPBinding;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
 import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 
@@ -27,6 +34,8 @@ public class UserMealsUtil {
         mealsTo.forEach(System.out::println);
 
         System.out.println(filteredByStreams(meals, LocalTime.of(7, 0), LocalTime.of(12, 0), 2000));
+        System.out.println("--------------------");
+        System.out.println(filteredByStreamsOp2(meals, LocalTime.of(7, 0), LocalTime.of(12, 0), 2000));
     }
 
     public static List<UserMealWithExcess> filteredByCycles(
@@ -63,6 +72,50 @@ public class UserMealsUtil {
                 .map(userMeal -> new UserMealWithExcess(userMeal.getDateTime(), userMeal.getDescription(), userMeal.getCalories(),
                         mapCaloriesPerDay.get(userMeal.getDateTime().toLocalDate()) > caloriesPerDay))
                 .collect(Collectors.toList());
+    }
+
+    public static List<UserMealWithExcess> filteredByStreamsOp2(List<UserMeal> meals, LocalTime
+            startTime, LocalTime endTime, int caloriesPerDay) {
+        class Holder<A, B> {
+            ArrayList<UserMeal> list;
+            HashMap<LocalDate, Integer> map;
+
+            public Holder(ArrayList<UserMeal> list, HashMap<LocalDate, Integer> map) {
+                this.list = list;
+                this.map = map;
+            }
+        }
+
+        return meals.stream().collect(Collector.of(
+                //supplier
+                () ->
+                    new Holder<ArrayList<UserMeal>, HashMap<LocalDate, Integer>>(
+                            new ArrayList<>(),
+                            new HashMap<>())
+                ,
+                //biConsumer
+                (holder,userMeal) -> {
+                    if (TimeUtil.isBetweenHalfOpen(userMeal.getDateTime().toLocalTime(), startTime, endTime)) {
+                       holder.list.add(userMeal);
+                    }
+                   holder.map.merge(userMeal.getDate(), userMeal.getCalories(), Integer::sum);
+                },
+                //BinaryOperator
+                (t1, t2) -> {
+                    t1.list.addAll(t2.list);
+                    t1.map.putAll(t2.map);
+                    return t1;
+                },
+                //Function
+                t -> {
+                    List<UserMealWithExcess> result = new ArrayList<>();
+                    for (UserMeal meal : t.list) {
+                        result.add(new UserMealWithExcess(meal.getDateTime(), meal.getDescription(), meal.getCalories(),
+                                t.map.get(meal.getDate()) > caloriesPerDay));
+                    }
+                    return result;
+                }));
+
     }
 
 }
