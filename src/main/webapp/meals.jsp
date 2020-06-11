@@ -8,6 +8,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="tags" tagdir="/WEB-INF/tags" %>
+<% request.setCharacterEncoding("UTF-8"); %>
 
 <html>
 <head>
@@ -22,21 +23,27 @@
 <hr>
 <h2>Meals</h2>
 
+
 <table class="table table-bordered table-striped">
-    <thead  class="thead-dark">
+    <thead class="thead-dark">
     <tr>
-        <th scope="col"> Date and Time</th>
+        <th scope="col">ID</th>
+        <th scope="col">Date and Time</th>
         <th scope="col">Description</th>
         <th scope="col">Calories</th>
         <th scope="col">Excess</th>
+        <th scope="col">Update</th>
+        <th scope="col">Delete</th>
     </tr>
     </thead>
     <tbody>
-    <jsp:useBean id="mealsList" scope="request" type="java.util.List"/>
+
+    <jsp:useBean id="mealsList" scope="request"  type="java.util.List"/>
     <c:forEach var="meal" items="${mealsList}">
 
 
         <tr style="color:${meal.excess ? 'red' : 'green'}">
+            <td><c:out value="${meal.id}"/></td>
             <td>
                 <tags:localDate date="${meal.dateTime}"/>
             </td>
@@ -44,10 +51,91 @@
             <td><c:out value="${meal.calories}"/></td>
             <td><c:out value="${meal.excess}"/></td>
 
+            <td>
+                <form action="${pageContext.request.contextPath}/meals" method="post">
+                    <input type="hidden" name="id" value="${meal.id}">
+                <button name="buttonFindById"  class="btn btn-warning">Update</button>
+                </form>
+            </td>
+            <td>
+                <form action="${pageContext.request.contextPath}/meals" method="post">
+                    <input type="hidden" name="id" value="${meal.id}">
+                    <button name="buttonDelete" type="submit" value="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </td>
+
         </tr>
     </c:forEach>
     </tbody>
 </table>
+
+<form hidden="hidden" name="formUpdate" action="${pageContext.request.contextPath}/meals" method="post">
+    <table class="table table-bordered table-striped">
+        <thead class="thead-dark">
+        <tr>
+            <th scope="col">Date and Time</th>
+            <th scope="col">Description</th>
+            <th scope="col">Calories</th>
+            <th scope="col">Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td><input type="datetime-local" name="dateTime"><br><br></td>
+            <td><input type="text" name="description"><br><br></td>
+            <td><input name="calories"><br><br></td>
+            <td>
+                <button name="buttonUpdate" type="submit" value="submit" class="btn btn-warning">Update</button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</form>
+
+
+<form name="formAdd" action="${pageContext.request.contextPath}/meals" method="post">
+    <table class="table table-bordered table-striped">
+        <thead class="thead-dark">
+        <tr>
+            <th scope="col">Date and Time</th>
+            <th scope="col">Description</th>
+            <th scope="col">Calories</th>
+            <th scope="col">Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td><input type="datetime-local" name="dateTime"><br><br></td>
+            <td><input type="text" name="description"><br><br></td>
+            <td><input type="text" name="calories"><br><br></td>
+            <td>
+                <button name="buttonAdd" type="submit" value="submit" class="btn btn-danger">Create</button>
+            </td>
+
+        </tr>
+        </tbody>
+    </table>
+</form>
+
+<form name="formFindById" action="${pageContext.request.contextPath}/meals" method="post">
+    <table class="table table-bordered table-striped">
+        <thead class="thead-dark">
+        <tr>
+            <th scope="col">Id</th>
+            <th scope="col">Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td><input type="text" name="id"><br><br></td>
+            <td>
+                <button name="buttonFindById" type="submit" value="submit" class="btn btn-danger">FindById</button>
+            </td>
+
+        </tr>
+        </tbody>
+    </table>
+</form>
 
 
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
