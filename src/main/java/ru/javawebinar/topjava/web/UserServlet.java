@@ -1,6 +1,8 @@
 package ru.javawebinar.topjava.web;
 
 import org.slf4j.Logger;
+import ru.javawebinar.topjava.model.Meal;
+import ru.javawebinar.topjava.model.Role;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.repository.UserRepository;
 
@@ -22,6 +24,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 public class UserServlet extends HttpServlet {
     private static final Logger log = getLogger(UserServlet.class);
     private UserRepository repository;
+
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
         repository = new InMemoryUserRepository();
@@ -39,14 +42,14 @@ public class UserServlet extends HttpServlet {
                 repository.delete(id);
                 response.sendRedirect("users");
                 break;
-//            case "create":
-//            case "update":
-//                final User user = "create".equals(action) ?
-//                        new User(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), "", 1000) :
-//                        repository.get(getId(request));
-//                request.setAttribute("meal", meal);
-//                request.getRequestDispatcher("/mealForm.jsp").forward(request, response);
-//                break;
+            case "create":
+            case "update":
+                final User user = "create".equals(action) ?
+                        new User(null, "","","", Role.USER) :
+                        repository.get(getId(request));
+                request.setAttribute("user", user);
+                request.getRequestDispatcher("/userForm.jsp").forward(request, response);
+                break;
             case "all":
             default:
                 log.info("getAll");
@@ -61,4 +64,19 @@ public class UserServlet extends HttpServlet {
         return Integer.parseInt(paramId);
     }
 
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
+        String id = request.getParameter("id");
+
+        User user  = new User(id.isEmpty() ? null : Integer.valueOf(id),
+               request.getParameter("name"),
+                request.getParameter("email"),
+                request.getParameter("password" ), Role.USER);
+
+        log.info(user.isNew() ? "Create {}" : "Update {}", user);
+        repository.save(user);
+        response.sendRedirect("users");
+    }
 }
