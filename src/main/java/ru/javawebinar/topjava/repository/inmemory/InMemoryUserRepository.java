@@ -11,6 +11,7 @@ import ru.javawebinar.topjava.repository.UserRepository;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Repository
 public class InMemoryUserRepository implements UserRepository {
@@ -19,6 +20,9 @@ public class InMemoryUserRepository implements UserRepository {
 
     private Map<Integer, User> repository = new ConcurrentHashMap<>();
     private AtomicInteger counter = new AtomicInteger(0);
+    private final int  USER_ID = 1;
+    private final int  ADMIN_ID = 2;
+
 
     {
         save(new User(null, "Pavel", "pavel@gmail.com", "pavel123", Role.ADMIN));
@@ -55,21 +59,19 @@ public class InMemoryUserRepository implements UserRepository {
     @Override
     public List<User> getAll() {
         log.info("getAll");
-        List<User> list = new ArrayList<User>(repository.values());
-        Collections.sort(list);
-        return list;
+
+        return repository.values().stream()
+                .sorted(Comparator.comparing(User::getName).thenComparing(User::getEmail))
+                .collect(Collectors.toList());
     }
 
     @Override
     public User getByEmail(String email) {
         log.info("getByEmail {}", email);
-        for (User user : repository.values()) {
-            if (user.getEmail().equals(email)) {
-                return user;
 
-            }
+        return repository.values().stream().
+                filter(user -> user.getEmail().equals(email)).
+                findAny().orElse(null);
 
-        }
-        return null;
     }
 }
